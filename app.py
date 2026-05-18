@@ -22,8 +22,8 @@ def pdf_oku(dosya):
     return metin.strip()
 
 def cv_analiz_et(cv_metni, key):
-    # v1beta yerine doğrudan stabil ve resmi 'v1' üretim sunucusuna bağlanıyoruz
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={key}"
+    # Model adını en güncel ve kararlı sürüm olan gemini-2.5-flash yapıyoruz
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
     
     headers = {
         "Content-Type": "application/json"
@@ -57,7 +57,14 @@ CV Metni:
         response_json = response.json()
         return response_json['candidates'][0]['content']['parts'][0]['text']
     else:
-        raise Exception(f"Google API Hatası (Kod {response.status_code}): {response.text}")
+        # Eğer gemini-2.5-flash da hesaba tanımlı değilse, en stabil alternatif olan gemini-1.5-flash-latest'ı dene
+        url_alt = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={key}"
+        response_alt = requests.post(url_alt, headers=headers, json=payload)
+        if response_alt.status_code == 200:
+            response_json = response_alt.json()
+            return response_json['candidates'][0]['content']['parts'][0]['text']
+        else:
+            raise Exception(f"Google API Hatası (Kod {response_alt.status_code}): {response_alt.text}")
 
 # Ekrandaki buton basma kontrolleri
 if dosya:
