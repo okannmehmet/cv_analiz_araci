@@ -22,21 +22,23 @@ def pdf_oku(dosya):
     return metin.strip()
 
 def cv_analiz_et(cv_metni, key):
-    # Model adını en güncel ve kararlı sürüm olan gemini-2.5-flash yapıyoruz
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
     
     headers = {
         "Content-Type": "application/json"
     }
     
-    prompt = f"""Aşağıdaki CV'yi analiz et ve Türkçe rapor oluştur:
+    # Yapay zekaya tarihleri ve harf boşluklarını doğru yorumlaması için sert talimat ekledik
+    prompt = f"""Aşağıdaki CV'yi çok dikkatli bir şekilde analiz et ve Türkçe detaylı bir kariyer raporu oluştur. 
 
-## 📊 CV Puanı (100 üzerinden puan ver ve gerekçe yaz)
+Kritik Not: PDF dönüştürme esnasında harfler arasında oluşabilecek istemsiz boşlukları (Örn: M echatronics, m ehm tokann gibi) veya PDF okuma kaynaklı karakter kaymalarını kesinlikle dikkate alma, bunları adayın yazım hatası olarak yorumlama. Tarihleri mantıklı bir süzgeçten geçir; 'Devam ediyor' veya yakın tarihli/mevcut süreçleri 'gelecek tarihli yalan beyan' olarak algılama, güncel durum olarak değerlendir. Daha yapıcı, profesyonel ve adayı geliştirmeye odaklı bir puanlama yap.
+
+## 📊 CV Puanı (100 üzerinden adil bir puan ver ve kısa gerekçe yaz)
 ## ✅ Güçlü Yönler (En az 3 madde)
-## ❌ Eksikler & Öneriler (En az 3 madde)
-## 🎯 Uygun Pozisyonlar (3-5 iş pozisyonu)
-## 🛠️ Beceriler (Tüm teknik ve soft skill'ler)
-## 💡 Genel Öneri (3-4 cümle tavsiye)
+## ❌ Eksikler & Öneriler (Geliştirilmesi gereken alanlar, net tavsiyeler)
+## 🎯 Uygun Pozisyonlar (Adayın çalışabileceği 3-5 iş pozisyonu)
+## 🛠️ Beceriler (Teknik ve soft skill'ler)
+## 💡 Genel Öneri (Gelecek vizyonu için 3-4 cümle tavsiye)
 
 CV Metni:
 {cv_metni[:4000]}"""
@@ -57,7 +59,7 @@ CV Metni:
         response_json = response.json()
         return response_json['candidates'][0]['content']['parts'][0]['text']
     else:
-        # Eğer gemini-2.5-flash da hesaba tanımlı değilse, en stabil alternatif olan gemini-1.5-flash-latest'ı dene
+        # B Planı: Eğer anahtar gemini-2.5-flash'a henüz açık değilse 1.5-flash-latest sürümünü dener
         url_alt = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={key}"
         response_alt = requests.post(url_alt, headers=headers, json=payload)
         if response_alt.status_code == 200:
