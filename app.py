@@ -1,16 +1,16 @@
 import streamlit as st
-from google import genai
+import requests
 import PyPDF2
 import io
+import json
 
 st.set_page_config(page_title="CV Analiz Aracı", page_icon="📄", layout="centered")
 
 st.title("📄 Ücretsiz CV Analiz Aracı")
 st.markdown("CV'nizi yükleyin, yapay zeka ücretsiz analiz etsin.")
 
-# 1. Anahtarı Streamlit Secrets kasasından alıp yeni modern Client'ı başlatıyoruz
+# Secrets kasasından anahtarı alıyoruz
 api_key = st.secrets["GEMINI_API_KEY"]
-client = genai.Client(api_key=api_key)
 
 dosya = st.file_uploader("CV dosyanızı seçin (PDF)", type=["pdf"])
 
@@ -21,7 +21,14 @@ def pdf_oku(dosya):
         metin += sayfa.extract_text() or ""
     return metin.strip()
 
-def cv_analiz_et(cv_metni):
+def cv_analiz_et(cv_metni, key):
+    # Kütüphane kullanmadan, doğrudan Google API sunucusuna bağlanıyoruz (v1beta hatasını ezer)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
+    
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
     prompt = f"""Aşağıdaki CV'yi analiz et ve Türkçe rapor oluştur:
 
 ## 📊 CV Puanı (100 üzerinden puan ver ve gerekçe yaz)
@@ -34,12 +41,25 @@ def cv_analiz_et(cv_metni):
 CV Metni:
 {cv_metni[:4000]}"""
 
-    # Yeni Google-GenAI kütüphanesi standart çağrısı
-    response = client.models.generate_content(
-        model='gemini-1.5-flash',
-        contents=prompt,
-    )
-    return response.text
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ]
+    }
+    
+    # Doğrudan internet isteği gönderiyoruz
+    response = requests.post(url, headers=headers, json=payload)
+    
+    if response.status_code == 200:
+        response_json = response.json()
+        # Gelen cevaptan metni ayıklıyoruz
+        return response_json['candidates'][0]['content']['parts'][0]['text']
+    else:
+        raise Exception(f"Google API Hatası (Kod {response.status_code}): {response.text}")
 
 # Ekrandaki buton basma kontrolleri
 if dosya:
@@ -47,11 +67,11 @@ if dosya:
         with st.spinner("Analiz ediliyor..."):
             try:
                 metin = pdf_oku(dosya)
-                sonuc = cv_analiz_et(metin)
+                sonuc = cv_analiz_et(metin, api_key)
                 st.markdown("---")
                 st.markdown(sonuc)
                 st.download_button("📥 Raporu İndir", sonuc, "rapor.txt")
             except Exception as e:
-                st.error(f"Hata: API anahtarınızı veya internet bağlantınızı kontrol edin. Detay: {str(e)}")
+                st.error(f"Hata: Sistem yanıt vermedi. Detay: {str(e)}")
 else:
     st.info("👆 CV dosyanızı yükleyin")
