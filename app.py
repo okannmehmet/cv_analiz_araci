@@ -2,14 +2,17 @@ import streamlit as st
 import google.generativeai as genai
 import PyPDF2
 import io
+import streamlit as st
+import google.generativeai as genai
 
 st.set_page_config(page_title="CV Analiz Aracı", page_icon="📄", layout="centered")
 
 st.title("📄 Ücretsiz CV Analiz Aracı")
 st.markdown("CV'nizi yükleyin, yapay zeka ücretsiz analiz etsin.")
 
-# Kullanıcı Google AI Studio'dan aldığı ücretsiz key'i buraya girecek
-api_key = st.text_input("Gemini API Anahtarı (Tamamen Ücretsizdir)", type="password")
+api_key = st.secrets["GEMINI_API_KEY"]
+genai.configure(api_key=api_key)
+
 
 dosya = st.file_uploader("CV dosyanızı seçin (PDF)", type=["pdf"])
 
