@@ -22,8 +22,8 @@ def pdf_oku(dosya):
     return metin.strip()
 
 def cv_analiz_et(cv_metni):
-    # En kararlı ve uyumluluk sorunu yaşamayan 'gemini-pro' modelini seçiyoruz
-    model = genai.GenerativeModel('gemini-pro')
+    # En güncel ve hızlı çalışan flash modelini seçiyoruz
+    model = genai.GenerativeModel('gemini-1.5-flash')
     
     prompt = f"""Aşağıdaki CV'yi analiz et ve Türkçe rapor oluştur:
 
