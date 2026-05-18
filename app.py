@@ -4,6 +4,22 @@ import PyPDF2
 import io
 import json
 
+# 📊 GOOGLE ANALYTICS AYARI
+ANALYTICS_ID = "G-0NQHLF7DMY"
+
+# Google Analytics izleme kodunu görünmez bir şekilde siteye gömen HTML
+analytics_html = f"""
+<script async src="https://www.googletagmanager.com/gtag/js?id={ANALYTICS_ID}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){{dataLayer.push(arguments);}}
+  gtag('js', new Date());
+  gtag('config', '{ANALYTICS_ID}');
+</script>
+"""
+# Sayacı siteye enjekte ediyoruz
+st.components.v1.html(analytics_html, height=0, width=0)
+
 st.set_page_config(page_title="CV Analiz Aracı", page_icon="📄", layout="centered")
 
 st.title("📄 Ücretsiz CV Analiz Aracı")
@@ -28,7 +44,6 @@ def cv_analiz_et(cv_metni, key):
         "Content-Type": "application/json"
     }
     
-    # Yapay zekaya tarihleri ve harf boşluklarını doğru yorumlaması için sert talimat ekledik
     prompt = f"""Aşağıdaki CV'yi çok dikkatli bir şekilde analiz et ve Türkçe detaylı bir kariyer raporu oluştur. 
 
 Kritik Not: PDF dönüştürme esnasında harfler arasında oluşabilecek istemsiz boşlukları (Örn: M echatronics, m ehm tokann gibi) veya PDF okuma kaynaklı karakter kaymalarını kesinlikle dikkate alma, bunları adayın yazım hatası olarak yorumlama. Tarihleri mantıklı bir süzgeçten geçir; 'Devam ediyor' veya yakın tarihli/mevcut süreçleri 'gelecek tarihli yalan beyan' olarak algılama, güncel durum olarak değerlendir. Daha yapıcı, profesyonel ve adayı geliştirmeye odaklı bir puanlama yap.
@@ -59,7 +74,6 @@ CV Metni:
         response_json = response.json()
         return response_json['candidates'][0]['content']['parts'][0]['text']
     else:
-        # B Planı: Eğer anahtar gemini-2.5-flash'a henüz açık değilse 1.5-flash-latest sürümünü dener
         url_alt = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={key}"
         response_alt = requests.post(url_alt, headers=headers, json=payload)
         if response_alt.status_code == 200:
