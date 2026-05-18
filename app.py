@@ -21,10 +21,9 @@ def pdf_oku(dosya):
         metin += sayfa.extract_text() or ""
     return metin.strip()
 
-# Fonksiyonun içindeki gereksiz api_key bağımlılığını kaldırdık
 def cv_analiz_et(cv_metni):
-    # Ücretsiz ve güçlü olan Gemini 1.5 Flash modelini seçiyoruz
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # En kararlı ve uyumluluk sorunu yaşamayan 'gemini-pro' modelini seçiyoruz
+    model = genai.GenerativeModel('gemini-pro')
     
     prompt = f"""Aşağıdaki CV'yi analiz et ve Türkçe rapor oluştur:
 
@@ -47,7 +46,7 @@ if dosya:
         with st.spinner("Analiz ediliyor..."):
             try:
                 metin = pdf_oku(dosya)
-                sonuc = cv_analiz_et(metin) # Fonksiyonu temiz çağırdık
+                sonuc = cv_analiz_et(metin)
                 st.markdown("---")
                 st.markdown(sonuc)
                 st.download_button("📥 Raporu İndir", sonuc, "rapor.txt")
