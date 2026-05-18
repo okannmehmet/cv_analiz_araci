@@ -22,8 +22,8 @@ def pdf_oku(dosya):
     return metin.strip()
 
 def cv_analiz_et(cv_metni, key):
-    # Kütüphane kullanmadan, doğrudan Google API sunucusuna bağlanıyoruz (v1beta hatasını ezer)
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
+    # v1beta yerine doğrudan stabil ve resmi 'v1' üretim sunucusuna bağlanıyoruz
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={key}"
     
     headers = {
         "Content-Type": "application/json"
@@ -51,12 +51,10 @@ CV Metni:
         ]
     }
     
-    # Doğrudan internet isteği gönderiyoruz
     response = requests.post(url, headers=headers, json=payload)
     
     if response.status_code == 200:
         response_json = response.json()
-        # Gelen cevaptan metni ayıklıyoruz
         return response_json['candidates'][0]['content']['parts'][0]['text']
     else:
         raise Exception(f"Google API Hatası (Kod {response.status_code}): {response.text}")
