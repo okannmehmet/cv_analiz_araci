@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import PyPDF2
 import io
 
@@ -8,9 +8,9 @@ st.set_page_config(page_title="CV Analiz Aracı", page_icon="📄", layout="cent
 st.title("📄 Ücretsiz CV Analiz Aracı")
 st.markdown("CV'nizi yükleyin, yapay zeka ücretsiz analiz etsin.")
 
-# 1. Anahtarı Streamlit Secrets kasasından çekiyoruz ve sisteme bir kez tanıtıyoruz
+# 1. Anahtarı Streamlit Secrets kasasından alıp yeni modern Client'ı başlatıyoruz
 api_key = st.secrets["GEMINI_API_KEY"]
-genai.configure(api_key=api_key)
+client = genai.Client(api_key=api_key)
 
 dosya = st.file_uploader("CV dosyanızı seçin (PDF)", type=["pdf"])
 
@@ -22,9 +22,6 @@ def pdf_oku(dosya):
     return metin.strip()
 
 def cv_analiz_et(cv_metni):
-    # En güncel ve hızlı çalışan flash modelini seçiyoruz
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
     prompt = f"""Aşağıdaki CV'yi analiz et ve Türkçe rapor oluştur:
 
 ## 📊 CV Puanı (100 üzerinden puan ver ve gerekçe yaz)
@@ -37,7 +34,11 @@ def cv_analiz_et(cv_metni):
 CV Metni:
 {cv_metni[:4000]}"""
 
-    response = model.generate_content(prompt)
+    # Yeni Google-GenAI kütüphanesi standart çağrısı
+    response = client.models.generate_content(
+        model='gemini-1.5-flash',
+        contents=prompt,
+    )
     return response.text
 
 # Ekrandaki buton basma kontrolleri
