@@ -2,17 +2,15 @@ import streamlit as st
 import google.generativeai as genai
 import PyPDF2
 import io
-import streamlit as st
-import google.generativeai as genai
 
 st.set_page_config(page_title="CV Analiz Aracı", page_icon="📄", layout="centered")
 
 st.title("📄 Ücretsiz CV Analiz Aracı")
 st.markdown("CV'nizi yükleyin, yapay zeka ücretsiz analiz etsin.")
 
+# 1. Anahtarı Streamlit Secrets kasasından çekiyoruz ve sisteme bir kez tanıtıyoruz
 api_key = st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=api_key)
-
 
 dosya = st.file_uploader("CV dosyanızı seçin (PDF)", type=["pdf"])
 
@@ -23,10 +21,8 @@ def pdf_oku(dosya):
         metin += sayfa.extract_text() or ""
     return metin.strip()
 
-def cv_analiz_et(cv_metni, api_key):
-    # Ücretsiz API anahtarımızı sisteme tanıtıyoruz
-    genai.configure(api_key=api_key)
-    
+# Fonksiyonun içindeki gereksiz api_key bağımlılığını kaldırdık
+def cv_analiz_et(cv_metni):
     # Ücretsiz ve güçlü olan Gemini 1.5 Flash modelini seçiyoruz
     model = genai.GenerativeModel('gemini-1.5-flash')
     
@@ -45,18 +41,17 @@ CV Metni:
     response = model.generate_content(prompt)
     return response.text
 
-if dosya and api_key:
+# Ekrandaki buton basma kontrolleri
+if dosya:
     if st.button("🔍 Analiz Et", type="primary", use_container_width=True):
         with st.spinner("Analiz ediliyor..."):
             try:
                 metin = pdf_oku(dosya)
-                sonuc = cv_analiz_et(metin, api_key)
+                sonuc = cv_analiz_et(metin) # Fonksiyonu temiz çağırdık
                 st.markdown("---")
                 st.markdown(sonuc)
                 st.download_button("📥 Raporu İndir", sonuc, "rapor.txt")
             except Exception as e:
                 st.error(f"Hata: API anahtarınızı veya internet bağlantınızı kontrol edin. Detay: {str(e)}")
-elif not api_key:
-    st.info("👆 Lütfen yukarıdaki kutuya Gemini API anahtarınızı girin")
-elif not dosya:
+else:
     st.info("👆 CV dosyanızı yükleyin")
